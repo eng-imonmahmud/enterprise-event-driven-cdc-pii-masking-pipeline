@@ -29,6 +29,23 @@ This solution solves this by:
 
 ## Architecture
 
+### Architecture Diagram
+
+```mermaid
+flowchart TD
+    classDef aws fill:#FF9900,color:#fff,stroke:#232F3E,stroke-width:2px;
+    
+    A([AWS EventBridge Scheduler]) -->|Triggers Every 1 Min| B[Data Generator Lambda]
+    B -->|Inserts Mock Data| C[(DynamoDB Table)]
+    C -->|Captures Changes| D{{DynamoDB Streams}}
+    D -->|Triggers on INSERT/MODIFY| E[PII Masking Lambda]
+    E -->|Applies Masking Logic| F[AWS CloudWatch Logs]
+    B -->|Logs Execution| F
+    E -->|Saves Sanitized JSON| G[(Amazon S3 Data Lake)]
+
+    class A,B,C,D,E,F,G aws;
+```
+
 ### Infrastructure Workflow & Event Flow
 1. **AWS EventBridge Scheduler** triggers the **Data Generator Lambda** every minute.
 2. The **Data Generator Lambda** synthesizes realistic customer profiles and performs an `INSERT` into the **Amazon DynamoDB Table**.
